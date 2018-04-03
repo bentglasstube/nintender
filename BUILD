@@ -40,7 +40,8 @@ pkg_winzip(
 
 pkg_tar(
     name = "nintender-linux",
-    extension = "tgz",
+    extension = "tar.gz",
+    strip_prefix = ".",
     srcs = [
         ":nintender",
         "//content",
