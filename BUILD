@@ -59,5 +59,6 @@ cc_library(
         "@libgam//:backdrop",
         "@libgam//:screen",
         "@libgam//:sprite",
+        "@libgam//:util",
     ],
 )

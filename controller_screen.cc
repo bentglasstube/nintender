@@ -1,6 +1,6 @@
 #include "controller_screen.h"
 
-ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), console_(Console::SNES) {
+ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), console_(Console::NES) {
   for (const auto& con : kConfig) {
     backdrops_.emplace(con.first, con.second.image);
   }

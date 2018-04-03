@@ -5,8 +5,10 @@
 #include "input.h"
 #include "sprite.h"
 #include "screen.h"
+#include "util.h"
 
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 class ControllerScreen : public Screen {
@@ -24,10 +26,10 @@ class ControllerScreen : public Screen {
 
     enum class Console { NES, SNES, GB };
 
-    std::unordered_map<Console, Backdrop> backdrops_;
+    std::unordered_map<Console, Backdrop, Util::CastHash<Console>> backdrops_;
     Sprite press_;
     Console console_;
-    std::unordered_set<Input::Button> active_buttons_;
+    std::unordered_set<Input::Button, Util::CastHash<Input::Button>> active_buttons_;
 
     struct Point {
       int x, y;
@@ -35,8 +37,8 @@ class ControllerScreen : public Screen {
 
     struct ConsoleConfig {
       std::string image;
-      std::unordered_map<Input::Button, Point> placements;
+      std::unordered_map<Input::Button, Point, Util::CastHash<Input::Button>> placements;
     };
 
-    static const std::unordered_map<Console, ConsoleConfig> kConfig;
+    static const std::unordered_map<Console, ConsoleConfig, Util::CastHash<Console>> kConfig;
 };
