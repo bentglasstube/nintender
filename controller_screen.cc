@@ -50,7 +50,23 @@ std::string ControllerScreen::get_music_track() const {
   return "";
 }
 
-const std::unordered_map<ControllerScreen::Console, ControllerScreen::ConsoleConfig> ControllerScreen::kConfig= {
+const std::unordered_map<ControllerScreen::Console, ControllerScreen::ConsoleConfig, Util::CastHash<ControllerScreen::Console>> ControllerScreen::kConfig= {
+  {
+    ControllerScreen::Console::GB,
+    {
+      "gb.png",
+      {
+        { Input::Button::Up,     {  51,  14} },
+        { Input::Button::Down,   {  51,  59} },
+        { Input::Button::Left,   {  29,  36 } },
+        { Input::Button::Right,  {  73,  36 } },
+        { Input::Button::A,      { 223,  23 } },
+        { Input::Button::B,      { 181,  43 } },
+        { Input::Button::Start,  { 136,  99} },
+        { Input::Button::Select, {  92,  99} },
+      }
+    }
+  },
   {
     ControllerScreen::Console::NES,
     {

@@ -22,7 +22,7 @@ class ControllerScreen : public Screen {
 
   private:
 
-    enum class Console { NES, SNES };
+    enum class Console { NES, SNES, GB };
 
     std::unordered_map<Console, Backdrop> backdrops_;
     Sprite press_;
