@@ -1,6 +1,6 @@
 #include "controller_screen.h"
 
-ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), console_(Console::NES) {
+ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), console_(Console::GB) {
   for (const auto& con : kConfig) {
     backdrops_.emplace(con.first, con.second.image);
   }
@@ -18,10 +18,27 @@ bool ControllerScreen::update(const Input& input, Audio&, unsigned int) {
   if (input.key_held(Input::Button::Start))  active_buttons_.insert(Input::Button::Start);
   if (input.key_held(Input::Button::Select)) active_buttons_.insert(Input::Button::Select);
 
-  /* if (input.key_held(Input::Button::X))      active_buttons_.insert(Input::Button::X); */
-  /* if (input.key_held(Input::Button::Y))      active_buttons_.insert(Input::Button::Y); */
-  /* if (input.key_held(Input::Button::L))      active_buttons_.insert(Input::Button::L); */
-  /* if (input.key_held(Input::Button::R))      active_buttons_.insert(Input::Button::R); */
+  if (input.key_held(Input::Button::X))      active_buttons_.insert(Input::Button::X);
+  if (input.key_held(Input::Button::Y))      active_buttons_.insert(Input::Button::Y);
+  if (input.key_held(Input::Button::L))      active_buttons_.insert(Input::Button::L);
+  if (input.key_held(Input::Button::R))      active_buttons_.insert(Input::Button::R);
+
+  if (input.key_pressed(Input::Button::User1)) {
+    // TODO better handling of console values
+    switch (console_) {
+      case ControllerScreen::Console::GB:
+        console_ = ControllerScreen::Console::NES;
+        break;
+
+      case ControllerScreen::Console::NES:
+        console_ = ControllerScreen::Console::SNES;
+        break;
+
+      case ControllerScreen::Console::SNES:
+        console_ = ControllerScreen::Console::GB;
+        break;
+    }
+  }
 
   return true;
 }
@@ -96,10 +113,10 @@ const std::unordered_map<ControllerScreen::Console, ControllerScreen::ConsoleCon
         { Input::Button::B,      { 208,  79 } },
         { Input::Button::Start,  { 138,  64 } },
         { Input::Button::Select, { 112,  64 } },
-        /* { Input::Button::X,      { 213,  35 } }, */
-        /* { Input::Button::Y,      { 189,  56} }, */
-        /* { Input::Button::L,      {  52,   3 } }, */
-        /* { Input::Button::R,      { 212,   3 } }, */
+        { Input::Button::X,      { 213,  35 } },
+        { Input::Button::Y,      { 189,  56} },
+        { Input::Button::L,      {  52,   3 } },
+        { Input::Button::R,      { 212,   3 } },
       }
     }
   },
