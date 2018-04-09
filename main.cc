@@ -12,7 +12,7 @@ int main(int, char**) {
 
   Game game(config);
 
-  game.input()->bind_key(SDL_SCANCODE_TAB, Input::Button::User1);
+  game.bind_key(SDL_SCANCODE_TAB, Input::Button::User1);
 
   game.loop(new ControllerScreen());
 
