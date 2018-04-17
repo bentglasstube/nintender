@@ -174,22 +174,21 @@ uint8_t usb_configured(void) {
 void usb_gamepad_from_snes(uint16_t data) {
   // data:    B Y E S ^ v < > A X L R
   // desired:         B A Y X L R E S
-  // data:    R L X A > < v ^ S E Y B
 
   gamepad_buttons =
     ((data & 0x800) >> 4) +
-    ((data & 0x008) << 3) +
-    ((data & 0x400) >> 5) +
+    ((data & 0x008) << 2) +
+    ((data & 0x400) >> 4) +
     ((data & 0x007) << 2) +
     ((data & 0x300) >> 8);
 
-       if (data & 0x80) gamepad_axis_y = 0x00;
-  else if (data & 0x40) gamepad_axis_y = 0xff;
-  else                  gamepad_axis_y = 0x80;
-
-       if (data & 0x20) gamepad_axis_x = 0x00;
-  else if (data & 0x10) gamepad_axis_x = 0xff;
+       if (data & 0x40) gamepad_axis_x = 0x00;
+  else if (data & 0x80) gamepad_axis_x = 0xff;
   else                  gamepad_axis_x = 0x80;
+
+       if (data & 0x10) gamepad_axis_y = 0x00;
+  else if (data & 0x20) gamepad_axis_y = 0xff;
+  else                  gamepad_axis_y = 0x80;
 }
 
 void usb_gamepad_from_nes(uint16_t data) {
