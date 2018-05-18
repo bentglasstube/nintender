@@ -1,70 +1,89 @@
 #include "controller_screen.h"
 
-ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), console_(Console::GB) {
+#include <SDL2/SDL.h>
+
+ControllerScreen::ControllerScreen() : press_("press.png", 0, 0, 8, 8), text_("text.png"), console_(Console::GB), state_(State::Waiting) {
   for (const auto& con : kConfig) {
     backdrops_.emplace(con.first, con.second.image);
   }
+
+  check_controllers();
 }
 
-bool ControllerScreen::update(const Input& input, Audio&, unsigned int) {
-  active_buttons_.clear();
+bool ControllerScreen::update(const Input& input, Audio&, unsigned int elapsed) {
+  if (state_ == State::Ready) {
 
-  if (input.key_held(Input::Button::Up))     active_buttons_.insert(Input::Button::Up);
-  if (input.key_held(Input::Button::Down))   active_buttons_.insert(Input::Button::Down);
-  if (input.key_held(Input::Button::Left))   active_buttons_.insert(Input::Button::Left);
-  if (input.key_held(Input::Button::Right))  active_buttons_.insert(Input::Button::Right);
-  if (input.key_held(Input::Button::A))      active_buttons_.insert(Input::Button::A);
-  if (input.key_held(Input::Button::B))      active_buttons_.insert(Input::Button::B);
-  if (input.key_held(Input::Button::Start))  active_buttons_.insert(Input::Button::Start);
-  if (input.key_held(Input::Button::Select)) active_buttons_.insert(Input::Button::Select);
+    if (timer_ > 0) timer_ -= elapsed;
+    active_buttons_.clear();
 
-  if (input.key_held(Input::Button::X))      active_buttons_.insert(Input::Button::X);
-  if (input.key_held(Input::Button::Y))      active_buttons_.insert(Input::Button::Y);
-  if (input.key_held(Input::Button::L))      active_buttons_.insert(Input::Button::L);
-  if (input.key_held(Input::Button::R))      active_buttons_.insert(Input::Button::R);
+    if (input.key_held(Input::Button::Up))     active_buttons_.insert(Input::Button::Up);
+    if (input.key_held(Input::Button::Down))   active_buttons_.insert(Input::Button::Down);
+    if (input.key_held(Input::Button::Left))   active_buttons_.insert(Input::Button::Left);
+    if (input.key_held(Input::Button::Right))  active_buttons_.insert(Input::Button::Right);
+    if (input.key_held(Input::Button::A))      active_buttons_.insert(Input::Button::A);
+    if (input.key_held(Input::Button::B))      active_buttons_.insert(Input::Button::B);
+    if (input.key_held(Input::Button::Start))  active_buttons_.insert(Input::Button::Start);
+    if (input.key_held(Input::Button::Select)) active_buttons_.insert(Input::Button::Select);
 
-  if (input.key_pressed(Input::Button::User1)) {
-    // TODO better handling of console values
-    switch (console_) {
-      case ControllerScreen::Console::GB:
-        console_ = ControllerScreen::Console::NES;
-        break;
+    if (input.key_held(Input::Button::X))      active_buttons_.insert(Input::Button::X);
+    if (input.key_held(Input::Button::Y))      active_buttons_.insert(Input::Button::Y);
+    if (input.key_held(Input::Button::L))      active_buttons_.insert(Input::Button::L);
+    if (input.key_held(Input::Button::R))      active_buttons_.insert(Input::Button::R);
 
-      case ControllerScreen::Console::NES:
-        console_ = ControllerScreen::Console::SNES;
-        break;
+    if (input.key_pressed(Input::Button::User1)) {
+      // TODO better handling of console values
+      switch (console_) {
+        case ControllerScreen::Console::GB:
+          console_ = ControllerScreen::Console::NES;
+          break;
 
-      case ControllerScreen::Console::SNES:
-        console_ = ControllerScreen::Console::GB;
-        break;
+        case ControllerScreen::Console::NES:
+          console_ = ControllerScreen::Console::SNES;
+          break;
+
+        case ControllerScreen::Console::SNES:
+          console_ = ControllerScreen::Console::GB;
+          break;
+      }
     }
+
   }
+
+  check_controllers();
 
   return true;
 }
 
 void ControllerScreen::draw(Graphics& graphics) const {
-  const auto b = backdrops_.find(console_);
-  if (b == backdrops_.end()) return;
-  b->second.draw(graphics);
+  if (state_ == State::Ready) {
 
-  const auto map = kConfig.find(console_);
-  if (map == kConfig.end()) return;
+    const auto b = backdrops_.find(console_);
+    if (b == backdrops_.end()) return;
+    b->second.draw(graphics);
 
-  for (const Input::Button b : active_buttons_) {
-    const auto p = map->second.placements.find(b);
-    if (p != map->second.placements.end()) {
-      press_.draw(graphics, p->second.x, p->second.y);
+    const auto map = kConfig.find(console_);
+    if (map == kConfig.end()) return;
+
+    for (const Input::Button b : active_buttons_) {
+      const auto p = map->second.placements.find(b);
+      if (p != map->second.placements.end()) {
+        press_.draw(graphics, p->second.x, p->second.y);
+      }
     }
+
+    if (timer_ > 0) text_.draw(graphics, name_, 134, 104, Text::Alignment::Center);
+
+  } else if (state_ == State::Waiting) {
+    text_.draw(graphics, "No controllers found", 134, 52, Text::Alignment::Center);
+  } else if (state_ == State::Choose) {
+    text_.draw(graphics, "Too many controllers found", 134, 52, Text::Alignment::Center);
+  } else if (state_ == State::Bind) {
+    text_.draw(graphics, "Unknown controller", 134, 52, Text::Alignment::Center);
   }
 }
 
 Screen* ControllerScreen::next_screen() const {
   return nullptr;
-}
-
-std::string ControllerScreen::get_music_track() const {
-  return "";
 }
 
 const std::unordered_map<ControllerScreen::Console, ControllerScreen::ConsoleConfig, Util::CastHash<ControllerScreen::Console>> ControllerScreen::kConfig= {
@@ -121,3 +140,23 @@ const std::unordered_map<ControllerScreen::Console, ControllerScreen::ConsoleCon
     }
   },
 };
+
+void ControllerScreen::check_controllers() {
+  const int joysticks = SDL_NumJoysticks();
+
+  if (joysticks == 0) {
+    state_ = State::Waiting;
+  } else if (state_ != State::Ready) {
+    for (int i = 0; i < joysticks; ++i) {
+      if (SDL_IsGameController(i)) {
+        SDL_GameControllerOpen(i);
+        name_ = SDL_JoystickNameForIndex(i);
+        state_ = State::Ready;
+        timer_ = 1000;
+
+        return;
+      }
+    }
+    state_ = State::Bind;
+  }
+}
